@@ -30,21 +30,24 @@ CREATE DATABASE IF NOT EXISTS biblioteca_db;
 USE biblioteca_db;
 
 -- Tabela de Autores
-CREATE TABLE IF NOT EXISTS autores (
+CREATE TABLE autores (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    nacionalidade VARCHAR(50),
-    data_nascimento DATE
+    nome VARCHAR(255) NOT NULL,
+    nacionalidade VARCHAR(100),
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Tabela de Livros
-CREATE TABLE IF NOT EXISTS livros (
+CREATE TABLE livros (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    titulo VARCHAR(200) NOT NULL,
+    titulo VARCHAR(255) NOT NULL,
     isbn VARCHAR(20) UNIQUE,
     ano_publicacao INT,
-    autor_id INT,
-    FOREIGN KEY (autor_id) REFERENCES autores(id) ON DELETE SET NULL
+    ano INT, -- Coluna duplicada 'ano' existe no schema atual
+    categoria VARCHAR(100),
+    autor_id INT NOT NULL,
+    FOREIGN KEY (autor_id) REFERENCES autores(id) ON DELETE CASCADE
 );
 
 🚀 Como Executar o Projeto
