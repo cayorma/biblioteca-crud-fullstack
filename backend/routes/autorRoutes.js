@@ -13,11 +13,10 @@ const handleError = (res, message, error, statusCode = 500) => {
 // =======================================================
 router.get('/', async (req, res) => {
     try {
-        // Query SQL: Seleciona todos os autores ordenados pelo nome
-        const query = 'SELECT id, nome, nacionalidade, criado_em, atualizado_em FROM autores ORDER BY nome';
-        const [rows] = await db.query(query); // Executa a consulta e pega as linhas de resultado
+        // Query SQL: Atualizada para 'authors' e nomes de colunas em inglês
+        const query = 'SELECT id, name, nationality, created_at, updated_at FROM authors ORDER BY name';
+        const [rows] = await db.query(query); 
         
-        // Retorna a lista de autores (JSON)
         res.status(200).json(rows);
     } catch (error) {
         handleError(res, 'Falha ao listar autores.', error);
@@ -29,14 +28,13 @@ router.get('/', async (req, res) => {
 // Rota 2: GET /autores/:id (Buscar autor por ID)
 // =======================================================
 router.get('/:id', async (req, res) => {
-    const { id } = req.params; // Pega o ID da URL (ex: /autores/5)
+    const { id } = req.params; 
     try {
-        // Query SQL: Seleciona apenas o autor com o ID fornecido
-        const query = 'SELECT id, nome, nacionalidade, criado_em, atualizado_em FROM autores WHERE id = ?';
+        // Query SQL: Atualizada para 'authors' e 'name'
+        const query = 'SELECT id, name, nationality, created_at, updated_at FROM authors WHERE id = ?';
         const [rows] = await db.query(query, [id]);
 
         if (rows.length === 0) {
-            // Se não encontrou, retorna 404 (Not Found)
             return res.status(404).send({ message: 'Autor não encontrado.' });
         }
         
@@ -51,19 +49,19 @@ router.get('/:id', async (req, res) => {
 // Rota 3: POST /autores (Criar novo autor)
 // =======================================================
 router.post('/', async (req, res) => {
-    const { nome, nacionalidade } = req.body; // Pega os dados JSON do corpo da requisição
+    // Pegamos 'nome' e 'nacionalidade' do corpo (Frontend ainda envia assim) 
+    // e mapeamos para 'name' e 'nationality' no SQL
+    const { nome, nacionalidade } = req.body; 
 
-    // Validação de dados (O nome é obrigatório)
     if (!nome) {
         return res.status(400).send({ message: 'Nome do autor é obrigatório.' });
     }
 
     try {
-        // Query SQL: Insere um novo autor. O '?' protege contra injeção SQL.
-        const query = 'INSERT INTO autores (nome, nacionalidade) VALUES (?, ?)';
+        // Query SQL: Atualizada para tabela 'authors' e colunas 'name', 'nationality'
+        const query = 'INSERT INTO authors (name, nationality) VALUES (?, ?)';
         const [result] = await db.query(query, [nome, nacionalidade]);
 
-        // Retorna o ID gerado e uma mensagem de sucesso (status 201: Created)
         res.status(201).send({
             id: result.insertId,
             message: 'Autor criado com sucesso!'
@@ -86,12 +84,11 @@ router.put('/:id', async (req, res) => {
     }
 
     try {
-        // Query SQL: Atualiza o autor com o ID fornecido
-        const query = 'UPDATE autores SET nome = ?, nacionalidade = ? WHERE id = ?';
+        // Query SQL: Atualizada para 'authors', 'name' e 'nationality'
+        const query = 'UPDATE authors SET name = ?, nationality = ? WHERE id = ?';
         const [result] = await db.query(query, [nome, nacionalidade, id]);
 
         if (result.affectedRows === 0) {
-            // Se 0 linhas foram afetadas, o autor não existia
             return res.status(404).send({ message: 'Autor não encontrado para atualização.' });
         }
 
@@ -108,7 +105,8 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const query = 'DELETE FROM autores WHERE id = ?';
+        // Query SQL: Atualizada para 'authors'
+        const query = 'DELETE FROM authors WHERE id = ?';
         const [result] = await db.query(query, [id]);
 
         if (result.affectedRows === 0) {
@@ -117,11 +115,9 @@ router.delete('/:id', async (req, res) => {
 
         res.status(200).send({ message: 'Autor excluído com sucesso!' });
     } catch (error) {
-        // Tratamento de erro específico para a Chave Estrangeira (Foreign Key)
-        // O MySQL retorna o código 1451 se o autor tiver livros vinculados
         if (error.errno === 1451) {
             return res.status(409).send({ 
-                message: 'Conflito: Não é possível excluir este autor, pois ele possui livros vinculados. Remova os livros primeiro.' 
+                message: 'Conflito: Não é possível excluir este autor, pois ele possui livros vinculados.' 
             });
         }
         handleError(res, `Falha ao excluir o autor com ID ${id}.`, error, 500);
